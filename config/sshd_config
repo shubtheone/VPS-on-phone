@@ -1,0 +1,42 @@
+# SSH Server Configuration for VPS-on-Phone
+# Secure defaults for mobile VPS
+
+Port 22
+AddressFamily any
+ListenAddress 0.0.0.0
+
+# Authentication
+PermitRootLogin no
+PasswordAuthentication yes
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+ChallengeResponseAuthentication no
+
+# Security
+MaxAuthTries 3
+MaxSessions 5
+LoginGraceTime 60
+StrictModes yes
+
+# Features
+X11Forwarding no
+AllowTcpForwarding yes
+GatewayPorts no
+PermitTunnel no
+
+# Environment
+AcceptEnv LANG LC_*
+PrintMotd yes
+PrintLastLog yes
+
+# Subsystems
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# Keep alive
+ClientAliveInterval 120
+ClientAliveCountMax 3
+TCPKeepAlive yes
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO

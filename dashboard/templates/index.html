@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPS-on-Phone Dashboard</title>
+    <meta name="description" content="Monitor and control your VPS-on-Phone services">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">📱</div>
+                <div class="title-group">
+                    <h1>VPS-on-Phone</h1>
+                    <span class="subtitle">Dashboard</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="stat-pill" id="battery-pill">
+                    <span class="icon">🔋</span>
+                    <span id="battery-percent">--</span>%
+                </div>
+                <div class="stat-pill">
+                    <span class="icon">⏱️</span>
+                    <span id="uptime">--</span>
+                </div>
+                <div class="status-indicator online" id="connection-status">
+                    <span class="dot"></span>
+                    <span>Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- System Stats -->
+            <section class="card system-stats">
+                <h2 class="card-title">
+                    <span class="icon">📊</span>
+                    System Resources
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-label">CPU</span>
+                            <span class="stat-value" id="cpu-value">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill cpu" id="cpu-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-label">Memory</span>
+                            <span class="stat-value" id="memory-value">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill memory" id="memory-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-label">Disk</span>
+                            <span class="stat-value" id="disk-value">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill disk" id="disk-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services Grid -->
+            <section class="card services-section">
+                <h2 class="card-title">
+                    <span class="icon">⚡</span>
+                    Services
+                </h2>
+                <div class="services-grid" id="services-grid">
+                    <!-- Services will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Connection Info -->
+            <section class="card connection-info">
+                <h2 class="card-title">
+                    <span class="icon">🌐</span>
+                    Connection Info
+                </h2>
+                <div class="connection-details">
+                    <div class="connection-item">
+                        <span class="label">SSH</span>
+                        <code id="ssh-command">ssh vps@localhost -p 22</code>
+                        <button class="copy-btn" onclick="copyToClipboard('ssh-command')">📋</button>
+                    </div>
+                    <div class="connection-item">
+                        <span class="label">Dashboard</span>
+                        <code id="dashboard-url">http://localhost:5000</code>
+                        <button class="copy-btn" onclick="copyToClipboard('dashboard-url')">📋</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="card quick-actions">
+                <h2 class="card-title">
+                    <span class="icon">🚀</span>
+                    Quick Actions
+                </h2>
+                <div class="actions-grid">
+                    <a href="/filebrowser" class="action-btn" target="_blank">
+                        <span class="action-icon">📁</span>
+                        <span>File Manager</span>
+                    </a>
+                    <a href="#" class="action-btn" onclick="refreshStatus()">
+                        <span class="action-icon">🔄</span>
+                        <span>Refresh</span>
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>VPS-on-Phone v1.0 | Last updated: <span id="last-update">--</span></p>
+        </footer>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
