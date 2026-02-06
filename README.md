@@ -55,7 +55,7 @@ chmod +x vps-setup.sh
 
 ## Profiles
 
-During setup, choose which components to install:
+During setup, choose which components to install. **Each profile offers granular package selection** - you can choose exactly which tools you want!
 
 | Profile | Description |
 |---------|-------------|
@@ -64,6 +64,36 @@ During setup, choose which components to install:
 | 📁 File Sharing | SFTP, FileBrowser (web UI) |
 | 🗄️ Database | MariaDB, PostgreSQL, Redis |
 | 📚 Learning Lab | Everything above |
+
+### Interactive Package Selection
+
+When you select a profile, you'll see an interactive menu:
+
+```
+╔═══════════════════════════════════════════════════════════════════╗
+║  🖥️  Development Server - Package Selection                       ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  ↑/↓: Navigate  SPACE: Toggle  A: All  N: None  ENTER: Install   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+  ▶ [✓] git
+       Version control system
+
+    [✓] python - Python 3 programming language
+    [ ] nodejs - JavaScript runtime (skipped!)
+    [✓] vim - Vim text editor
+    ...
+
+  Selected: 8/10 | ENTER=Install | S=Skip
+```
+
+**Controls:**
+- **↑/↓ or j/k**: Navigate through packages
+- **SPACE**: Toggle package on/off
+- **A**: Select all packages
+- **N**: Deselect all packages
+- **S**: Skip entire profile
+- **ENTER**: Install selected packages
 
 ## Network Access
 
