@@ -1,0 +1,23 @@
+# Local Testing & Sandboxing
+test-env/
+test-dashboard.sh
+filebrowser.db
+filebrowser.log
+*.db
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+dist/
+build/
+*.egg-info/
+
+# OS/System
+.DS_Store
+Thumbs.db
+.vps-on-phone/

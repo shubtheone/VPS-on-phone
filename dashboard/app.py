@@ -88,5 +88,43 @@ def restart(sid):
     subprocess.run(['pkill', '-f', SERVICES[sid]['process']])
     return jsonify({'success': True})
 
+@app.route('/filebrowser/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
+@app.route('/filebrowser/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
+def filebrowser_proxy(path=''):
+    """Proxy requests to FileBrowser on port 8080"""
+    import requests
+    
+    # Build target URL
+    target_url = f'http://localhost:8080/{path}'
+    
+    # Forward query parameters
+    if request.query_string:
+        target_url += f'?{request.query_string.decode()}'
+    
+    try:
+        # Forward the request to FileBrowser
+        resp = requests.request(
+            method=request.method,
+            url=target_url,
+            headers={k: v for k, v in request.headers if k.lower() != 'host'},
+            data=request.get_data(),
+            cookies=request.cookies,
+            allow_redirects=False
+        )
+        
+        # Build response
+        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'x-frame-options']
+        headers = [(k, v) for k, v in resp.raw.headers.items() if k.lower() not in excluded_headers]
+        
+        response = app.make_response((resp.content, resp.status_code, headers))
+        
+        # Allow iframe embedding
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
+        
+        return response
+    except requests.exceptions.ConnectionError:
+        return jsonify({'error': 'FileBrowser service not running'}), 503
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=DASHBOARD_PORT)

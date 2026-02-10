@@ -234,8 +234,46 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+/**
+ * Switch between Dashboard and File Manager tabs
+ */
+function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        if (content.id === `${tabName}-tab`) {
+            content.classList.add('active');
+        } else {
+            content.classList.remove('active');
+        }
+    });
+
+    // Lazy load FileBrowser iframe
+    if (tabName === 'files') {
+        const iframe = document.getElementById('filebrowser-iframe');
+        if (iframe.getAttribute('src') === '') {
+            iframe.src = '/filebrowser/';
+        }
+    }
+
+    // Save active tab to localStorage
+    localStorage.setItem('activeTab', tabName);
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Restore last active tab
+    const lastTab = localStorage.getItem('activeTab') || 'dashboard';
+    switchTab(lastTab);
+
     updateDashboard();
     setInterval(updateDashboard, UPDATE_INTERVAL);
 });

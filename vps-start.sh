@@ -36,6 +36,16 @@ if command -v nginx &> /dev/null; then
     nginx 2>/dev/null && echo "✓ Nginx started" || echo "Nginx already running"
 fi
 
+# Check for filebrowser
+if command -v filebrowser &> /dev/null; then
+    echo "Starting File Manager..."
+    # Ensure the database directory exists
+    mkdir -p /var/lib/filebrowser
+    # Start filebrowser in the background
+    nohup filebrowser -d /var/lib/filebrowser/filebrowser.db --baseURL /filebrowser > /var/log/filebrowser.log 2>&1 &
+    echo "✓ File Manager started"
+fi
+
 echo "Starting dashboard..."
 if [ -d /opt/vps-dashboard ]; then
     cd /opt/vps-dashboard

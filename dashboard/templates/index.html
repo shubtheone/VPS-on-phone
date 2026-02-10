@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <div class="dashboard">
         <!-- Header -->
@@ -36,8 +38,20 @@
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Dashboard</span>
+            </button>
+            <button class="tab-btn" data-tab="files" onclick="switchTab('files')">
+                <span class="tab-icon">📁</span>
+                <span class="tab-label">File Manager</span>
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab Content -->
+        <main class="main-content tab-content active" id="dashboard-tab">
             <!-- System Stats -->
             <section class="card system-stats">
                 <h2 class="card-title">
@@ -113,17 +127,30 @@
                     Quick Actions
                 </h2>
                 <div class="actions-grid">
-                    <a href="/filebrowser" class="action-btn" target="_blank">
-                        <span class="action-icon">📁</span>
-                        <span>File Manager</span>
-                    </a>
                     <a href="#" class="action-btn" onclick="refreshStatus()">
                         <span class="action-icon">🔄</span>
                         <span>Refresh</span>
                     </a>
+                    <a href="#" class="action-btn" onclick="window.open('http://localhost:22', '_blank')">
+                        <span class="action-icon">🔐</span>
+                        <span>SSH Terminal</span>
+                    </a>
                 </div>
             </section>
         </main>
+
+        <!-- File Manager Tab Content -->
+        <div class="tab-content" id="files-tab">
+            <div class="file-manager-container">
+                <div class="file-manager-header">
+                    <h2>📁 File Manager</h2>
+                    <a href="/filebrowser/" target="_blank" class="icon-btn" title="Open in new tab">
+                        <span>↗️</span>
+                    </a>
+                </div>
+                <iframe id="filebrowser-iframe" src="" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
+            </div>
+        </div>
 
         <!-- Footer -->
         <footer class="footer">
@@ -133,4 +160,5 @@
 
     <script src="/static/js/dashboard.js"></script>
 </body>
+
 </html>

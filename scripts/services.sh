@@ -43,7 +43,7 @@ start_service() {
             run_in_ubuntu "redis-server --daemonize yes"
             ;;
         filebrowser)
-            run_in_ubuntu "filebrowser -d /var/lib/filebrowser/filebrowser.db &"
+            run_in_ubuntu "filebrowser -d /var/lib/filebrowser/filebrowser.db --baseURL /filebrowser &"
             ;;
         dashboard)
             run_in_ubuntu "cd /opt/vps-dashboard && source venv/bin/activate && nohup python3 app.py > /var/log/dashboard.log 2>&1 &"

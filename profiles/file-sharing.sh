@@ -135,10 +135,21 @@ if [ "$INSTALL_FILEBROWSER" = "true" ]; then
     mkdir -p /srv/files/uploads
     
     filebrowser config init --database /var/lib/filebrowser/filebrowser.db
-    filebrowser config set --database /var/lib/filebrowser/filebrowser.db --address 0.0.0.0 --port 8080 --root /srv/files
-    filebrowser users add admin admin --database /var/lib/filebrowser/filebrowser.db --perm.admin
+    filebrowser config set --database /var/lib/filebrowser/filebrowser.db --address 0.0.0.0 --port 8080 --root /srv/files --baseURL /filebrowser
+    filebrowser users add admin "admin12345678" --database /var/lib/filebrowser/filebrowser.db --perm.admin
     
-    echo "FileBrowser installed! Access at http://localhost:8080 (admin/admin)"
+    echo ""
+    echo "✓ FileBrowser installed successfully!"
+    echo ""
+    echo "  📁 File Manager is integrated in the Dashboard"
+    echo "  🌐 Dashboard URL: http://localhost:5000"
+    echo "  📋 Click the 'File Manager' tab to access files"
+    echo ""
+    echo "  Default Login Credentials:"
+    echo "    Username: admin"
+    echo "    Password: admin12345678"
+    echo ""
+    echo "  ⚠️  Change the password after first login!"
 fi
 
 echo "✓ File Sharing packages installed!"

@@ -5,13 +5,14 @@ Transform your Android phone into a full-featured VPS using Termux.
 ## Features
 
 - 🐧 **Full Ubuntu Environment** - Ubuntu running via proot-distro
-- 📊 **Web Dashboard** - Monitor services, resources, and connections
+- 📊 **Web Dashboard** - Professional tabbed interface to monitor services and manage files
+- 📁 **Integrated File Manager** - Manage VPS files directly within the dashboard (Tabbed UI)
 - 🔐 **SSH Access** - Secure remote terminal access
 - 🌐 **Web Hosting** - Nginx with PHP support
-- 📁 **File Sharing** - SFTP and web file manager
 - 🗄️ **Databases** - MariaDB, PostgreSQL, Redis
 - 🚀 **Easy Setup** - One script to install everything
 - 🔋 **Battery Optimization** - Wake lock support for persistent operation
+- 🧪 **Developer Tools** - Built-in local testing environment for Ubuntu/Linux
 
 ## Quick Start
 
@@ -114,11 +115,12 @@ Choose your tunnel for external access:
 Access the web dashboard at `http://localhost:5000`
 
 Features:
-- Real-time service monitoring
-- System resource usage (CPU, RAM, Disk)
-- Service control (start/stop/restart)
-- Connection info with copy buttons
-- Battery status
+- **🗂️ Tabbed Navigation**: Seamlessly switch between System Stats and File Manager
+- **📁 Integrated File Manager**: Manage your VPS files without leaving the dashboard
+- **📊 Real-time Monitoring**: Service status and system resources (CPU, RAM, Disk)
+- **⚡ Service Control**: Start/stop/restart all VPS services with one click
+- **🔗 Connection Hub**: Easy access to SSH commands and public tunnel URLs
+- **🔋 Battery Info**: Monitor your phone's battery level and charging status
 
 ## Directory Structure
 
@@ -148,7 +150,7 @@ vps-on-phone/
 | Service | User | Password |
 |---------|------|----------|
 | SSH/Ubuntu | vps | vpspassword |
-| FileBrowser | admin | admin |
+| FileBrowser | admin | admin12345678 |
 | MariaDB | vps | vpspassword |
 
 ## Tips

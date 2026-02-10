@@ -442,7 +442,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install Flask and dependencies
-pip install flask psutil
+pip install flask psutil requests
 
 echo "Dashboard dependencies installed!"
 DASH_SETUP
