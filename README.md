@@ -6,9 +6,10 @@ Transform your Android phone into a full-featured VPS using Termux.
 
 - 🐧 **Full Ubuntu Environment** - Ubuntu running via proot-distro
 - 📊 **Web Dashboard** - Professional tabbed interface to monitor services and manage files
-- ✅ **Todo List** - Beautiful todo app accessible from anywhere via your VPS IP
-- ⬇️ **Download Manager** - Download files to your VPS, access later from any device
-- 📁 **Integrated File Manager** - Manage VPS files directly within the dashboard (Tabbed UI)
+- ✅ **Todo List** - Task management with priorities and categories, accessible from anywhere
+- ⬇️ **Download Manager** - Download files and YouTube videos (MP4/MP3) to your VPS
+- 🎥 **YouTube Downloader** - Built-in yt-dlp integration for video and audio downloads
+- 📁 **Integrated File Manager** - Manage VPS files directly within the dashboard
 - 🔐 **SSH Access** - Secure remote terminal access
 - 🌐 **Web Hosting** - Nginx with PHP support
 - 🗄️ **Databases** - MariaDB, PostgreSQL, Redis
@@ -120,16 +121,17 @@ Features:
 - **🗂️ Tabbed Navigation**: Seamlessly switch between Dashboard, Todo List, Downloads, and File Manager
 - **✅ Todo List**: Create, manage, and track your tasks from anywhere
   - Priority levels (Low, Medium, High)
-  - Categories (Work, Personal, Shopping, Health, Other)
+  - Categories (Work, Personal, Other)
   - Filter by active/completed
   - Beautiful, responsive UI
   - Syncs across all devices accessing your VPS
-- **⬇️ Download Manager**: Download files to your VPS
-  - Paste any URL to download
+- **⬇️ Download Manager**: Download files and YouTube videos to your VPS
+  - **YouTube Support**: Download videos as MP4 or extract audio as MP3
+  - Auto-detects YouTube URLs and shows format selector
+  - Direct file downloads for any URL
   - Background downloads (phone can sleep)
-  - Real-time progress tracking
-  - Download completed files from any device
-  - Supports large files (GBs)
+  - Real-time progress tracking with proper video titles
+  - Access downloaded files from any device
 - **📁 Integrated File Manager**: Manage your VPS files without leaving the dashboard
 - **📊 Real-time Monitoring**: Service status and system resources (CPU, RAM, Disk)
 - **⚡ Service Control**: Start/stop/restart all VPS services with one click
@@ -138,13 +140,19 @@ Features:
 
 ### Access Your Todo List & Downloads From Anywhere
 
-Once you set up a tunnel (Cloudflare/Tailscale), you can access your todo list and downloads from:
+Once you set up a tunnel (Cloudflare/Tailscale), you can access everything from any device:
 - 📱 Your phone (at work, school, anywhere)
-- 💻 Your laptop
-- 🖥️ Your desktop
+- 💻 Your laptop / 🖥️ Your desktop
 - 📟 Any device with a web browser
 
-Your data stays on YOUR phone, completely private and under your control!
+**What you can do remotely:**
+- ✅ Manage your todo list
+- 🎥 Download YouTube videos/music to your phone VPS
+- ⬇️ Download files from any URL
+- 📁 Access and manage all your files
+- 🎵 Stream/download MP3s extracted from YouTube
+
+**Privacy**: Your data stays on YOUR phone, completely private and under your control!
 
 ## Directory Structure
 
@@ -196,27 +204,33 @@ vps-on-phone/
 4. Only expose necessary ports
 ## Testing on Ubuntu (Before Deploying to Phone)
 
-Want to test the dashboard and new features on your Ubuntu PC first?
+Test all dashboard features on your Ubuntu/Linux PC before deploying to your phone:
 
 ```bash
-# In your project directory
 cd dashboard
 
-# Create virtual environment
+# Create and activate virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies
+# Install dependencies (includes yt-dlp for YouTube downloads)
 pip install -r requirements.txt
 
 # Run the dashboard
 python3 app.py
-
-# Open browser to http://localhost:5000
 ```
 
-✅ **Test the Todo List and Download Manager on your PC first!**  
-📖 **Full testing guide**: See [TESTING-UBUNTU.md](TESTING-UBUNTU.md) for detailed instructions
+**Open browser to http://localhost:5000**
+
+✅ **Tested & Working:**
+- Todo List with categories and priorities
+- YouTube downloads (MP4 video / MP3 audio)
+- Direct file downloads from any URL
+- Service control (start/stop/restart)
+- File management with FileBrowser
+- Real-time system monitoring
+
+📖 **Full testing guide**: See [TESTING-UBUNTU.md](TESTING-UBUNTU.md) for detailed setup instructions
 ## Troubleshooting
 
 ### Services not starting
