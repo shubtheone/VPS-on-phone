@@ -38,11 +38,9 @@ class TodoManager:
         
         # Add default categories if they don't exist
         default_categories = [
-            ('work', 'Work', '#3b82f6', '💼'),
-            ('personal', 'Personal', '#10b981', '👤'),
-            ('shopping', 'Shopping', '#f59e0b', '🛒'),
-            ('health', 'Health', '#ef4444', '❤️'),
-            ('other', 'Other', '#6b7280', '📌')
+            ('work', 'Work', '#3b82f6', '[W]'),
+            ('personal', 'Personal', '#10b981', '[P]'),
+            ('other', 'Other', '#6b7280', '[O]')
         ]
         
         for cat_id, name, color, icon in default_categories:

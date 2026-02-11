@@ -94,24 +94,45 @@ function updateServices(services) {
     const grid = document.getElementById('services-grid');
     if (!grid || !services) return;
 
-    grid.innerHTML = services.map(service => `
-        <div class="service-card" data-service="${service.id}">
+    console.log('Updating services:', services); // Debug log
+
+    // Clear existing content first
+    grid.innerHTML = '';
+    
+    services.forEach(service => {
+        console.log(`Service ${service.id}: running=${service.running}`); // Debug log
+        
+        const statusText = service.running ? 'Running' : 'Stopped';
+        const statusClass = service.running ? 'running' : 'stopped';
+        const buttonText = service.running ? 'Stop' : 'Start';
+        const buttonClass = service.running ? 'stop' : 'start';
+        const buttonAction = service.running ? 'stop' : 'start';
+        
+        console.log(`Service ${service.id}: statusText=${statusText}, buttonText=${buttonText}`); // Debug
+        
+        // Create service card element
+        const serviceCard = document.createElement('div');
+        serviceCard.className = 'service-card';
+        serviceCard.setAttribute('data-service', service.id);
+        
+        serviceCard.innerHTML = `
             <div class="service-icon">${SERVICE_ICONS[service.id] || SERVICE_ICONS.default}</div>
             <div class="service-name">${service.name}</div>
-            <div class="service-status ${service.running ? 'running' : 'stopped'}">
+            <div class="service-status ${statusClass}">
                 <span class="dot"></span>
-                ${service.running ? 'Running' : 'Stopped'}
+                ${statusText}
             </div>
             <div class="service-port">:${service.port}</div>
             <div class="service-actions">
-                ${service.running
-            ? `<button class="service-btn stop" onclick="controlService('${service.id}', 'stop')">Stop</button>`
-            : `<button class="service-btn start" onclick="controlService('${service.id}', 'start')">Start</button>`
-        }
+                <button class="service-btn ${buttonClass}" onclick="controlService('${service.id}', '${buttonAction}')">${buttonText}</button>
                 <button class="service-btn" onclick="controlService('${service.id}', 'restart')">↻</button>
             </div>
-        </div>
-    `).join('');
+        `;
+        
+        grid.appendChild(serviceCard);
+    });
+    
+    console.log('Grid updated with', services.length, 'services'); // Debug
 }
 
 /**
@@ -177,12 +198,19 @@ async function controlService(serviceId, action) {
 
         if (result.success) {
             showToast(`${serviceId} ${action}ed successfully`, 'success');
-            setTimeout(updateDashboard, 1000);
+            // Immediate refresh, then another one after 2 seconds to ensure status is updated
+            updateDashboard();
+            setTimeout(updateDashboard, 2000);
         } else {
-            showToast(`Failed to ${action} ${serviceId}`, 'error');
+            // Show the specific error message from the server
+            const errorMsg = result.error || `Failed to ${action} ${serviceId}`;
+            showToast(errorMsg, 'error');
+            // Still refresh to show current status
+            updateDashboard();
         }
     } catch (error) {
         showToast(`Error: ${error.message}`, 'error');
+        updateDashboard();
     }
 }
 
@@ -194,11 +222,46 @@ function copyToClipboard(elementId) {
     if (!el) return;
 
     const text = el.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('Copied to clipboard!', 'success');
-    }).catch(() => {
+    
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Copied to clipboard!', 'success');
+        }).catch(() => {
+            // Fallback to older method
+            fallbackCopy(text);
+        });
+    } else {
+        // Use fallback for older browsers
+        fallbackCopy(text);
+    }
+}
+
+/**
+ * Fallback copy method for older browsers
+ */
+function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showToast('Copied to clipboard!', 'success');
+        } else {
+            showToast('Failed to copy', 'error');
+        }
+    } catch (err) {
         showToast('Failed to copy', 'error');
-    });
+    }
+    
+    document.body.removeChild(textArea);
 }
 
 /**
@@ -548,22 +611,46 @@ function displayDownloads(downloads) {
     }).join('');
 }
 
+function checkYouTubeUrl() {
+    const urlInput = document.getElementById('download-url');
+    const formatSelect = document.getElementById('download-format');
+    
+    if (!urlInput || !formatSelect) return;
+    
+    const url = urlInput.value;
+    
+    // Check if URL is YouTube
+    const youtubePatterns = [
+        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/.+/i,
+        /(?:https?:\/\/)?(?:www\.)?youtube-nocookie\.com\/.+/i
+    ];
+    
+    const isYouTube = youtubePatterns.some(pattern => pattern.test(url));
+    formatSelect.style.display = isYouTube ? 'inline-block' : 'none';
+}
+
 async function addDownload(event) {
     event.preventDefault();
     
     const url = document.getElementById('download-url').value;
+    const formatSelect = document.getElementById('download-format');
+    const format = formatSelect.style.display !== 'none' ? formatSelect.value : null;
     
     try {
+        const body = { url };
+        if (format) body.format = format;
+        
         const response = await fetch(`${API_BASE}/api/downloads`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ url })
+            body: JSON.stringify(body)
         });
         
         const result = await response.json();
         
         if (result.success) {
             document.getElementById('download-url').value = '';
+            formatSelect.style.display = 'none';
             loadDownloads();
             showToast('Download started!', 'success');
         } else {

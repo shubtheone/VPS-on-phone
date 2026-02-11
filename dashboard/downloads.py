@@ -6,6 +6,8 @@ import sqlite3
 import uuid
 import threading
 import time
+import re
+import subprocess
 from datetime import datetime
 import requests
 from urllib.parse import urlparse, unquote
@@ -37,23 +39,73 @@ class DownloadManager:
                       size INTEGER,
                       downloaded INTEGER,
                       error TEXT,
+                      format TEXT,
                       created_at TIMESTAMP,
                       completed_at TIMESTAMP)''')
+        
+        # Migration: Add format column if it doesn't exist
+        try:
+            c.execute("SELECT format FROM downloads LIMIT 1")
+        except sqlite3.OperationalError:
+            # Column doesn't exist, add it
+            c.execute("ALTER TABLE downloads ADD COLUMN format TEXT DEFAULT 'auto'")
+        
         conn.commit()
         conn.close()
     
-    def add_download(self, url):
-        """Add a new download"""
+    def _is_youtube_url(self, url):
+        """Check if URL is a YouTube video"""
+        youtube_patterns = [
+            r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/',
+            r'(https?://)?(www\.)?youtu\.be/',
+        ]
+        return any(re.match(pattern, url) for pattern in youtube_patterns)
+    
+    def _get_youtube_title(self, url):
+        """Get YouTube video title before downloading"""
+        try:
+            result = subprocess.run(
+                ['python3', '-m', 'yt_dlp', '--get-title', '--no-playlist', url],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                # Clean the title for use as filename
+                title = result.stdout.strip()
+                # Remove invalid filename characters
+                title = re.sub(r'[<>:"/\\|?*]', '', title)
+                return title
+        except:
+            pass
+        return None
+    
+    def add_download(self, url, format_type=None):
+        """Add a new download with auto-detection"""
         download_id = str(uuid.uuid4())[:8]
-        filename = self._get_filename_from_url(url)
+        
+        # Auto-detect format based on URL if not specified
+        if self._is_youtube_url(url):
+            if not format_type:
+                format_type = 'mp4'  # Default to video for YouTube
+            # Get video title for proper filename
+            title = self._get_youtube_title(url)
+            if title:
+                filename = f'{title}.{format_type}'
+            else:
+                filename = f'youtube_video_{download_id}.{format_type}'
+        else:
+            format_type = 'file'  # Regular file download
+            filename = self._get_filename_from_url(url)
+        
         filepath = os.path.join(DOWNLOAD_DIR, filename)
         
         conn = sqlite3.connect(self.db)
         c = conn.cursor()
         c.execute('''INSERT INTO downloads 
-                     (id, url, filename, filepath, status, progress, size, downloaded, created_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                  (download_id, url, filename, filepath, 'queued', 0, 0, 0, datetime.now()))
+                     (id, url, filename, filepath, status, progress, size, downloaded, format, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                  (download_id, url, filename, filepath, 'queued', 0, 0, 0, format_type, datetime.now()))
         conn.commit()
         conn.close()
         
@@ -88,16 +140,21 @@ class DownloadManager:
         
         try:
             # Get download info
-            c.execute('SELECT url, filepath FROM downloads WHERE id = ?', (download_id,))
+            c.execute('SELECT url, filepath, format FROM downloads WHERE id = ?', (download_id,))
             row = c.fetchone()
             if not row:
                 return
             
-            url, filepath = row
+            url, filepath, format_type = row
             
             # Update status to downloading
             c.execute('UPDATE downloads SET status = ? WHERE id = ?', ('downloading', download_id))
             conn.commit()
+            
+            # Check if it's a YouTube URL
+            if format_type in ['mp3', 'mp4']:
+                self._download_youtube(download_id, url, filepath, format_type, conn, c)
+                return
             
             # Download with progress tracking
             response = requests.get(url, stream=True, timeout=30)
@@ -135,12 +192,103 @@ class DownloadManager:
         finally:
             conn.close()
     
+    def _download_youtube(self, download_id, url, filepath, format_type, conn, c):
+        """Download YouTube video using yt-dlp"""
+        try:
+            base_dir = os.path.dirname(filepath)
+            # Use video title in filename
+            output_template = os.path.join(base_dir, '%(title)s.%(ext)s')
+            
+            # Set yt-dlp options based on format
+            if format_type == 'mp3':
+                cmd = [
+                    'python3', '-m', 'yt_dlp',
+                    '-x',  # Extract audio
+                    '--audio-format', 'mp3',
+                    '--audio-quality', '0',  # Best quality
+                    '-o', output_template,
+                    '--no-playlist',
+                    '--progress',
+                    url
+                ]
+            else:  # mp4
+                cmd = [
+                    'python3', '-m', 'yt_dlp',
+                    '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                    '--merge-output-format', 'mp4',
+                    '-o', output_template,
+                    '--no-playlist',
+                    '--progress',
+                    url
+                ]
+            
+            # Run yt-dlp
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True
+            )
+            
+            # Monitor progress
+            for line in process.stdout:
+                # Parse progress from yt-dlp output
+                if '[download]' in line and '%' in line:
+                    try:
+                        match = re.search(r'(\d+\.?\d*)%', line)
+                        if match:
+                            progress = int(float(match.group(1)))
+                            c.execute('UPDATE downloads SET progress = ? WHERE id = ?',
+                                    (progress, download_id))
+                            conn.commit()
+                    except:
+                        pass
+            
+            process.wait()
+            
+            if process.returncode == 0:
+                # Find the most recently created file in the download directory
+                base_dir = os.path.dirname(filepath)
+                extension = format_type if format_type in ['mp3', 'mp4'] else '*'
+                
+                downloaded_file = None
+                latest_time = 0
+                
+                for file in os.listdir(base_dir):
+                    if file.endswith(f'.{extension}') or extension == '*':
+                        file_path = os.path.join(base_dir, file)
+                        file_time = os.path.getmtime(file_path)
+                        if file_time > latest_time:
+                            latest_time = file_time
+                            downloaded_file = file_path
+                
+                if downloaded_file and os.path.exists(downloaded_file):
+                    file_size = os.path.getsize(downloaded_file)
+                    c.execute('''UPDATE downloads SET status = ?, progress = 100, 
+                                size = ?, downloaded = ?, filepath = ?, 
+                                filename = ?, completed_at = ? WHERE id = ?''',
+                            ('completed', file_size, file_size, downloaded_file,
+                             os.path.basename(downloaded_file), datetime.now(), download_id))
+                else:
+                    c.execute('UPDATE downloads SET status = ?, error = ? WHERE id = ?',
+                            ('failed', 'File not found after download', download_id))
+            else:
+                c.execute('UPDATE downloads SET status = ?, error = ? WHERE id = ?',
+                        ('failed', f'yt-dlp exited with code {process.returncode}', download_id))
+            
+            conn.commit()
+            
+        except Exception as e:
+            c.execute('UPDATE downloads SET status = ?, error = ? WHERE id = ?',
+                     ('failed', str(e), download_id))
+            conn.commit()
+    
     def get_downloads(self):
         """Get all downloads"""
         conn = sqlite3.connect(self.db)
         c = conn.cursor()
         c.execute('''SELECT id, url, filename, status, progress, size, downloaded, 
-                            error, created_at, completed_at 
+                            error, format, created_at, completed_at 
                      FROM downloads ORDER BY created_at DESC''')
         rows = c.fetchall()
         conn.close()
@@ -156,8 +304,9 @@ class DownloadManager:
                 'size': row[5],
                 'downloaded': row[6],
                 'error': row[7],
-                'created_at': row[8],
-                'completed_at': row[9]
+                'format': row[8] if len(row) > 8 else 'auto',
+                'created_at': row[9] if len(row) > 9 else row[8],
+                'completed_at': row[10] if len(row) > 10 else row[9]
             })
         
         return downloads

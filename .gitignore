@@ -1,10 +1,12 @@
 # Local Testing & Sandboxing
 test-env/
+test-services/
 test-dashboard.sh
 filebrowser.db
 filebrowser.log
 *.db
 *.log
+udo systemctl disable plymouth-quit-wait.service
 
 # Python
 __pycache__/

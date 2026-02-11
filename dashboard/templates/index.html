@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1200, initial-scale=1.0, minimum-scale=0.5">
     <title>VPS-on-Phone Dashboard</title>
     <meta name="description" content="Monitor and control your VPS-on-Phone services">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=6">
+    <link rel="stylesheet" href="/static/css/style.css?v=11">
 </head>
 
 <body>
@@ -182,8 +182,6 @@
                                 <select id="todo-category">
                                     <option value="work">Work</option>
                                     <option value="personal">Personal</option>
-                                    <option value="shopping">Shopping</option>
-                                    <option value="health">Health</option>
                                     <option value="other" selected>Other</option>
                                 </select>
                             </div>
@@ -222,11 +220,12 @@
                     </h2>
                     <form id="add-download-form" onsubmit="addDownload(event)">
                         <div class="form-group">
-                            <input type="url" id="download-url" placeholder="Paste URL here..." required autocomplete="off">
+                            <input type="url" id="download-url" placeholder="Enter download URL..." required autocomplete="off" oninput="checkYouTubeUrl()">
+                            <select id="download-format" style="display: none;">
+                                <option value="mp4">MP4 (Video)</option>
+                                <option value="mp3">MP3 (Audio)</option>
+                            </select>
                             <button type="submit" class="btn-primary">Start Download</button>
-                        </div>
-                        <div class="download-tips">
-                            <p>Note: Supports direct file downloads only. For YouTube, install youtube-dl or yt-dlp first.</p>
                         </div>
                     </form>
                 </section>
@@ -266,7 +265,7 @@
         </footer>
     </div>
 
-    <script src="/static/js/dashboard.js?v=3"></script>
+    <script src="/static/js/dashboard.js?v=14"></script>
 </body>
 
 </html>

@@ -175,25 +175,28 @@ body {
     justify-content: center;
     gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-md);
-    color: var(--text-secondary);
+    color: #e0e0e0;
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
     position: relative;
     flex: 1;
+    transition: all 0.2s ease;
 }
 
 .tab-btn:hover {
-    background: var(--bg-secondary);
+    background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+    border-color: var(--accent-primary);
 }
 
 .tab-btn.active {
     background: var(--bg-secondary);
     color: var(--text-primary);
+    border-color: var(--accent-primary);
 }
 
 .tab-btn.active::after {
@@ -822,10 +825,27 @@ body {
 .add-download-section .form-group {
     display: flex;
     gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .add-download-section input {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 200px;
+    max-width: 100%;
+}
+
+.add-download-section select {
+    height: 42px;
+    padding: 0 16px;
+    flex: 0 0 auto;
+    min-width: 140px;
+}
+
+.add-download-section button {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .download-tips {

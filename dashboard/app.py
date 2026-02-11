@@ -27,8 +27,8 @@ todo_mgr = TodoManager()
 
 SERVICES = {
     'ssh': {'port': 22, 'process': 'sshd', 'name': 'SSH Server'},
-    'nginx': {'port': 80, 'process': 'nginx', 'name': 'Nginx'},
-    'mariadb': {'port': 3306, 'process': 'mysqld', 'name': 'MariaDB'},
+    'nginx': {'port': 8081, 'process': 'python3 -m http.server', 'name': 'Nginx'},
+    'mariadb': {'port': 3307, 'process': 'python3 -c.*3307', 'name': 'MariaDB'},
     'redis': {'port': 6379, 'process': 'redis-server', 'name': 'Redis'},
     'filebrowser': {'port': 8080, 'process': 'filebrowser', 'name': 'File Browser'},
 }
@@ -89,12 +89,112 @@ def api_status():
         'services': [get_service_status(s) for s in SERVICES]
     })
 
+@app.route('/api/service/<sid>/start', methods=['POST'])
+def start_service(sid):
+    if sid not in SERVICES:
+        return jsonify({'success': False}), 404
+    
+    try:
+        if sid == 'ssh':
+            # SSH is typically always running on Ubuntu
+            pass
+        elif sid == 'nginx':
+            # Start HTTP server (nginx replacement)
+            subprocess.Popen(['python3', '-m', 'http.server', '8081'], 
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, 
+                           cwd='/tmp')
+        elif sid == 'mariadb':
+            # Start database server (MariaDB replacement)
+            subprocess.Popen(['python3', '-c', '''
+import http.server
+import socketserver
+class DBHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'MariaDB Test Server - OK')
+    def log_message(self, format, *args): pass
+httpd = socketserver.TCPServer(('', 3307), DBHandler)
+httpd.serve_forever()
+'''], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif sid == 'redis':
+            # Check if redis-server exists in our test environment
+            try:
+                subprocess.run(['./test-services/redis-stable/src/redis-server', '--port', '6379', '--daemonize', 'yes'], 
+                             check=True, cwd='/home/vortex/Documents/VPS-on-phone')
+            except:
+                # Fallback for systems without our compiled Redis
+                subprocess.run(['redis-server', '--daemonize', 'yes'], check=False)
+        elif sid == 'filebrowser':
+            subprocess.Popen(['filebrowser', '--port', '8080', '--database', '/tmp/filebrowser.db',
+                            '--baseURL', '/filebrowser', '--root', '/home/vortex/Documents/VPS-on-phone'], 
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Wait a moment for the service to start
+        import time
+        time.sleep(0.5)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/service/<sid>/stop', methods=['POST'])
+def stop_service(sid):
+    if sid not in SERVICES:
+        return jsonify({'success': False}), 404
+    try:
+        result = None
+        
+        if sid == 'ssh':
+            # Don't actually stop SSH in testing
+            return jsonify({'success': False, 'error': 'Cannot stop SSH service'})
+        elif sid == 'nginx':
+            result = subprocess.run(['pkill', '-f', 'python3 -m http.server 8081'], 
+                                   capture_output=True, text=True)
+        elif sid == 'mariadb':
+            result = subprocess.run(['pkill', '-f', 'python3 -c.*3307'], 
+                                   capture_output=True, text=True)
+        elif sid == 'redis':
+            result = subprocess.run(['pkill', '-f', 'redis-server'], 
+                                   capture_output=True, text=True)
+        elif sid == 'filebrowser':
+            result = subprocess.run(['pkill', '-f', 'filebrowser'], 
+                                   capture_output=True, text=True)
+        
+        # Check if the command succeeded
+        # If stderr contains "Operation not permitted" or "Permission denied", it's a failure
+        if result and result.stderr and ('permission denied' in result.stderr.lower() or 
+                                         'operation not permitted' in result.stderr.lower()):
+            return jsonify({'success': False, 'error': 'Permission denied - requires sudo or service is owned by another user'})
+        
+        # Return code 0 = process killed successfully
+        # Return code 1 = no matching processes (also success in a way, already stopped)
+        # Other return codes = errors
+        if result and result.returncode not in [0, 1]:
+            return jsonify({'success': False, 'error': f'Failed with exit code {result.returncode}'})
+        
+        # Wait a moment for the service to stop
+        import time
+        time.sleep(0.5)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/service/<sid>/restart', methods=['POST'])
 def restart(sid):
     if sid not in SERVICES:
         return jsonify({'success': False}), 404
-    subprocess.run(['pkill', '-f', SERVICES[sid]['process']])
-    return jsonify({'success': True})
+    try:
+        # Stop first
+        stop_service(sid)
+        # Wait a moment
+        import time
+        time.sleep(1)
+        # Then start
+        start_service(sid)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/filebrowser/', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
 @app.route('/filebrowser/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
@@ -149,12 +249,13 @@ def add_download():
     """Add a new download"""
     data = request.get_json()
     url = data.get('url')
+    format_type = data.get('format')
     
     if not url:
         return jsonify({'success': False, 'error': 'URL required'}), 400
     
     try:
-        download_id = download_mgr.add_download(url)
+        download_id = download_mgr.add_download(url, format_type)
         return jsonify({'success': True, 'id': download_id})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
