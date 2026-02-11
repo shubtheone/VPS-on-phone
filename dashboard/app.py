@@ -6,7 +6,7 @@ import subprocess
 import socket
 import json
 from datetime import datetime
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file
 
 try:
     import psutil
@@ -14,8 +14,16 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
 
+# Import our new managers
+from downloads import DownloadManager
+from todos import TodoManager
+
 app = Flask(__name__)
 DASHBOARD_PORT = 5000
+
+# Initialize managers
+download_mgr = DownloadManager()
+todo_mgr = TodoManager()
 
 SERVICES = {
     'ssh': {'port': 22, 'process': 'sshd', 'name': 'SSH Server'},
@@ -125,6 +133,123 @@ def filebrowser_proxy(path=''):
         return response
     except requests.exceptions.ConnectionError:
         return jsonify({'error': 'FileBrowser service not running'}), 503
+
+# ============================================================================
+# Download Manager API Routes
+# ============================================================================
+
+@app.route('/api/downloads', methods=['GET'])
+def get_downloads():
+    """Get all downloads"""
+    downloads = download_mgr.get_downloads()
+    return jsonify(downloads)
+
+@app.route('/api/downloads', methods=['POST'])
+def add_download():
+    """Add a new download"""
+    data = request.get_json()
+    url = data.get('url')
+    
+    if not url:
+        return jsonify({'success': False, 'error': 'URL required'}), 400
+    
+    try:
+        download_id = download_mgr.add_download(url)
+        return jsonify({'success': True, 'id': download_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/downloads/<download_id>', methods=['DELETE'])
+def delete_download(download_id):
+    """Delete a download"""
+    try:
+        download_mgr.delete_download(download_id)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/downloads/<download_id>/file', methods=['GET'])
+def get_download_file(download_id):
+    """Download the completed file"""
+    filepath = download_mgr.get_download_path(download_id)
+    
+    if filepath:
+        return send_file(filepath, as_attachment=True)
+    else:
+        return jsonify({'error': 'File not found or not ready'}), 404
+
+# ============================================================================
+# Todo App API Routes
+# ============================================================================
+
+@app.route('/api/todos', methods=['GET'])
+def get_todos():
+    """Get todos with optional filter"""
+    filter_by = request.args.get('filter', 'all')
+    todos = todo_mgr.get_todos(filter_by)
+    return jsonify(todos)
+
+@app.route('/api/todos', methods=['POST'])
+def add_todo():
+    """Add a new todo"""
+    data = request.get_json()
+    title = data.get('title')
+    
+    if not title:
+        return jsonify({'success': False, 'error': 'Title required'}), 400
+    
+    try:
+        todo_id = todo_mgr.add_todo(
+            title=title,
+            description=data.get('description', ''),
+            priority=data.get('priority', 'medium'),
+            category=data.get('category', 'other'),
+            due_date=data.get('due_date')
+        )
+        return jsonify({'success': True, 'id': todo_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/todos/<todo_id>', methods=['PUT'])
+def update_todo(todo_id):
+    """Update a todo"""
+    data = request.get_json()
+    
+    try:
+        todo_mgr.update_todo(todo_id, **data)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/todos/<todo_id>/toggle', methods=['POST'])
+def toggle_todo(todo_id):
+    """Toggle todo completion"""
+    try:
+        todo_mgr.toggle_todo(todo_id)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/todos/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    """Delete a todo"""
+    try:
+        todo_mgr.delete_todo(todo_id)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/todos/stats', methods=['GET'])
+def get_todo_stats():
+    """Get todo statistics"""
+    stats = todo_mgr.get_stats()
+    return jsonify(stats)
+
+@app.route('/api/todos/categories', methods=['GET'])
+def get_categories():
+    """Get all categories"""
+    categories = todo_mgr.get_categories()
+    return jsonify(categories)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=DASHBOARD_PORT)

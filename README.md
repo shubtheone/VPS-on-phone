@@ -6,6 +6,8 @@ Transform your Android phone into a full-featured VPS using Termux.
 
 - 🐧 **Full Ubuntu Environment** - Ubuntu running via proot-distro
 - 📊 **Web Dashboard** - Professional tabbed interface to monitor services and manage files
+- ✅ **Todo List** - Beautiful todo app accessible from anywhere via your VPS IP
+- ⬇️ **Download Manager** - Download files to your VPS, access later from any device
 - 📁 **Integrated File Manager** - Manage VPS files directly within the dashboard (Tabbed UI)
 - 🔐 **SSH Access** - Secure remote terminal access
 - 🌐 **Web Hosting** - Nginx with PHP support
@@ -115,12 +117,34 @@ Choose your tunnel for external access:
 Access the web dashboard at `http://localhost:5000`
 
 Features:
-- **🗂️ Tabbed Navigation**: Seamlessly switch between System Stats and File Manager
+- **🗂️ Tabbed Navigation**: Seamlessly switch between Dashboard, Todo List, Downloads, and File Manager
+- **✅ Todo List**: Create, manage, and track your tasks from anywhere
+  - Priority levels (Low, Medium, High)
+  - Categories (Work, Personal, Shopping, Health, Other)
+  - Filter by active/completed
+  - Beautiful, responsive UI
+  - Syncs across all devices accessing your VPS
+- **⬇️ Download Manager**: Download files to your VPS
+  - Paste any URL to download
+  - Background downloads (phone can sleep)
+  - Real-time progress tracking
+  - Download completed files from any device
+  - Supports large files (GBs)
 - **📁 Integrated File Manager**: Manage your VPS files without leaving the dashboard
 - **📊 Real-time Monitoring**: Service status and system resources (CPU, RAM, Disk)
 - **⚡ Service Control**: Start/stop/restart all VPS services with one click
 - **🔗 Connection Hub**: Easy access to SSH commands and public tunnel URLs
 - **🔋 Battery Info**: Monitor your phone's battery level and charging status
+
+### Access Your Todo List & Downloads From Anywhere
+
+Once you set up a tunnel (Cloudflare/Tailscale), you can access your todo list and downloads from:
+- 📱 Your phone (at work, school, anywhere)
+- 💻 Your laptop
+- 🖥️ Your desktop
+- 📟 Any device with a web browser
+
+Your data stays on YOUR phone, completely private and under your control!
 
 ## Directory Structure
 
@@ -170,7 +194,29 @@ vps-on-phone/
 2. Use SSH key authentication
 3. Keep packages updated
 4. Only expose necessary ports
+## Testing on Ubuntu (Before Deploying to Phone)
 
+Want to test the dashboard and new features on your Ubuntu PC first?
+
+```bash
+# In your project directory
+cd dashboard
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the dashboard
+python3 app.py
+
+# Open browser to http://localhost:5000
+```
+
+✅ **Test the Todo List and Download Manager on your PC first!**  
+📖 **Full testing guide**: See [TESTING-UBUNTU.md](TESTING-UBUNTU.md) for detailed instructions
 ## Troubleshooting
 
 ### Services not starting

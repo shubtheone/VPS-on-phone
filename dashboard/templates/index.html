@@ -8,7 +8,7 @@
     <meta name="description" content="Monitor and control your VPS-on-Phone services">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=6">
 </head>
 
 <body>
@@ -16,7 +16,6 @@
         <!-- Header -->
         <header class="header">
             <div class="header-left">
-                <div class="logo">📱</div>
                 <div class="title-group">
                     <h1>VPS-on-Phone</h1>
                     <span class="subtitle">Dashboard</span>
@@ -24,11 +23,11 @@
             </div>
             <div class="header-right">
                 <div class="stat-pill" id="battery-pill">
-                    <span class="icon">🔋</span>
+                    <span class="stat-label">Battery:</span>
                     <span id="battery-percent">--</span>%
                 </div>
                 <div class="stat-pill">
-                    <span class="icon">⏱️</span>
+                    <span class="stat-label">Uptime:</span>
                     <span id="uptime">--</span>
                 </div>
                 <div class="status-indicator online" id="connection-status">
@@ -41,12 +40,16 @@
         <!-- Tab Navigation -->
         <nav class="tab-navigation">
             <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
-                <span class="tab-icon">📊</span>
                 <span class="tab-label">Dashboard</span>
             </button>
+            <button class="tab-btn" data-tab="todos" onclick="switchTab('todos')">
+                <span class="tab-label">Todo List</span>
+            </button>
+            <button class="tab-btn" data-tab="downloads" onclick="switchTab('downloads')">
+                <span class="tab-label">Downloads</span>
+            </button>
             <button class="tab-btn" data-tab="files" onclick="switchTab('files')">
-                <span class="tab-icon">📁</span>
-                <span class="tab-label">File Manager</span>
+                <span class="tab-label">Files</span>
             </button>
         </nav>
 
@@ -55,7 +58,6 @@
             <!-- System Stats -->
             <section class="card system-stats">
                 <h2 class="card-title">
-                    <span class="icon">📊</span>
                     System Resources
                 </h2>
                 <div class="stats-grid">
@@ -92,7 +94,6 @@
             <!-- Services Grid -->
             <section class="card services-section">
                 <h2 class="card-title">
-                    <span class="icon">⚡</span>
                     Services
                 </h2>
                 <div class="services-grid" id="services-grid">
@@ -103,7 +104,6 @@
             <!-- Connection Info -->
             <section class="card connection-info">
                 <h2 class="card-title">
-                    <span class="icon">🌐</span>
                     Connection Info
                 </h2>
                 <div class="connection-details">
@@ -123,7 +123,6 @@
             <!-- Quick Actions -->
             <section class="card quick-actions">
                 <h2 class="card-title">
-                    <span class="icon">🚀</span>
                     Quick Actions
                 </h2>
                 <div class="actions-grid">
@@ -139,13 +138,122 @@
             </section>
         </main>
 
+        <!-- Todo List Tab Content -->
+        <div class="tab-content" id="todos-tab">
+            <div class="todos-container">
+                <!-- Todo Stats -->
+                <section class="todo-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="todo-active">0</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="todo-completed">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="todo-total">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="todo-completion-rate">0%</div>
+                        <div class="stat-label">Completion Rate</div>
+                    </div>
+                </section>
+
+                <!-- Add Todo Form -->
+                <section class="card add-todo-section">
+                    <h2 class="card-title">
+                        Add New Task
+                    </h2>
+                    <form id="add-todo-form" onsubmit="addTodo(event)">
+                        <div class="form-group">
+                            <input type="text" id="todo-title" placeholder="What needs to be done?" required autocomplete="off">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <select id="todo-priority">
+                                    <option value="low">Low Priority</option>
+                                    <option value="medium" selected>Medium Priority</option>
+                                    <option value="high">High Priority</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <select id="todo-category">
+                                    <option value="work">Work</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="shopping">Shopping</option>
+                                    <option value="health">Health</option>
+                                    <option value="other" selected>Other</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-primary">Add Task</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Filter Buttons -->
+                <div class="todo-filters">
+                    <button class="filter-btn active" onclick="filterTodos('all')">All</button>
+                    <button class="filter-btn" onclick="filterTodos('active')">Active</button>
+                    <button class="filter-btn" onclick="filterTodos('completed')">Completed</button>
+                </div>
+
+                <!-- Todo List -->
+                <section class="card todos-section">
+                    <div id="todos-list" class="todos-list">
+                        <!-- Todos will be populated by JavaScript -->
+                    </div>
+                    <div id="todos-empty" class="empty-state" style="display: none;">
+                        <h3>No tasks yet</h3>
+                        <p>Add your first task to get started</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Downloads Tab Content -->
+        <div class="tab-content" id="downloads-tab">
+            <div class="downloads-container">
+                <!-- Add Download Form -->
+                <section class="card add-download-section">
+                    <h2 class="card-title">
+                        Add New Download
+                    </h2>
+                    <form id="add-download-form" onsubmit="addDownload(event)">
+                        <div class="form-group">
+                            <input type="url" id="download-url" placeholder="Paste URL here..." required autocomplete="off">
+                            <button type="submit" class="btn-primary">Start Download</button>
+                        </div>
+                        <div class="download-tips">
+                            <p>Note: Supports direct file downloads only. For YouTube, install youtube-dl or yt-dlp first.</p>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Downloads List -->
+                <section class="card downloads-section">
+                    <h2 class="card-title">
+                        Downloads
+                    </h2>
+                    <div id="downloads-list" class="downloads-list">
+                        <!-- Downloads will be populated by JavaScript -->
+                    </div>
+                    <div id="downloads-empty" class="empty-state" style="display: none;">
+                        <h3>No downloads yet</h3>
+                        <p>Add a URL above to start downloading</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
         <!-- File Manager Tab Content -->
         <div class="tab-content" id="files-tab">
             <div class="file-manager-container">
                 <div class="file-manager-header">
-                    <h2>📁 File Manager</h2>
+                    <h2>File Manager</h2>
                     <a href="/filebrowser/" target="_blank" class="icon-btn" title="Open in new tab">
-                        <span>↗️</span>
+                        <span>↗</span>
                     </a>
                 </div>
                 <iframe id="filebrowser-iframe" src="" frameborder="0" allow="clipboard-read; clipboard-write"></iframe>
@@ -158,7 +266,7 @@
         </footer>
     </div>
 
-    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/dashboard.js?v=3"></script>
 </body>
 
 </html>
