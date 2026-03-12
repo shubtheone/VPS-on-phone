@@ -1,7 +1,7 @@
 # VPS-on-Phone
 
 Transform your Android phone into a full-featured VPS using Termux.
-
+This project is ongoing.
 ## Features
 
 - 🐧 **Full Ubuntu Environment** - Ubuntu running via proot-distro
